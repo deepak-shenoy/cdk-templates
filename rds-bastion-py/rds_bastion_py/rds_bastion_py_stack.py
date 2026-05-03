@@ -146,7 +146,7 @@ class RdsBastionPyStack(Stack):
         # PostgreSQL instance
         db_instance = rds.DatabaseInstance(self, "RdsInstance",
             engine=rds.DatabaseInstanceEngine.postgres(
-                version=rds.PostgresEngineVersion.VER_15_4
+                version=rds.PostgresEngineVersion.VER_14
             ),
             instance_type=ec2.InstanceType.of(
                 ec2.InstanceClass.T3, ec2.InstanceSize.MICRO
