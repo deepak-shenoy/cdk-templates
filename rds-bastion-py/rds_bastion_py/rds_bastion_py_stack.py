@@ -123,6 +123,8 @@ class RdsBastionPyStack(Stack):
         db_secret = secretsmanager.Secret(self,"RDSSecret",
             secret_name="rds-bastion/db-credentials",
             generate_secret_string=secretsmanager.SecretStringGenerator(
+                secret_string_template='{"username": "dbadmin"}',
+                generate_string_key="password",
                 exclude_punctuation=True,
                 include_space=False,
                 password_length=16
