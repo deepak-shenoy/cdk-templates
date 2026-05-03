@@ -12,7 +12,6 @@ from rds_bastion_py.rds_bastion_py_stack import RdsBastionPyStack
 
 
 app = cdk.App()
-RdsBastionPyStack(app, "RdsBastionPyStack",
-    )
+RdsBastionPyStack(app, "RdsBastionPyStack")
 
 app.synth()
