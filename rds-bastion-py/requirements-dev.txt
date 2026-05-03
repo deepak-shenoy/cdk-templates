@@ -1,0 +1,10 @@
+#
+# Build an RDS Database with access through a Bastion Swerver
+#
+# Python requirements file (Development/Test)
+#
+# Deepak Shenoy
+# May 3rd, 2026
+#
+
+pytest==6.2.5
