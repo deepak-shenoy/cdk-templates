@@ -18,3 +18,5 @@ cdk.out
 
 # Intellij
 *.idea/
+**/.DS_Store
+*.DS_Store

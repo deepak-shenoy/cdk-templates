@@ -20,3 +20,5 @@ The server (bastion) that is running doesn't have any inbound port or SSH
 keys; it also sits on a public subnet.  The SSM Agent running on this node maintains a persistent outbound connection to the SSM
 service.  When a session starts, SSM routes traffic through this connection.  The traffic is then passed
 to the database server that sits on a private subnet network.
+
+![Slide1.jpeg](artifacts/docs/Overview/Slide1.jpeg)
