@@ -1,5 +1,5 @@
 #
-# Build an RDS Database with access through a Bastion Swerver
+# Build an RDS Database with access through AWS SSM
 #
 # Main Stack Code
 #
@@ -11,7 +11,6 @@ from pydoc import describe
 from aws_cdk import (
     Duration,
     Stack,
-    # aws_sqs as sqs,
     RemovalPolicy,
     CfnOutput,
     SecretValue,
@@ -23,7 +22,7 @@ from aws_cdk import (
 )
 from constructs import Construct
 
-class RdsBastionPyStack(Stack):
+class RdsSSMPyStack(Stack):
 
     def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
@@ -60,10 +59,10 @@ class RdsBastionPyStack(Stack):
         #------------------------------------------------------------------------------------------------
         # Security Groups
 
-        # Bastion SG - No inbound needed as SSM handles it
-        bastion_sg = ec2.SecurityGroup(self, "BastionSG",
+        # Database Tools SG - No inbound needed as SSM handles it
+        db_tools_sg = ec2.SecurityGroup(self, "DbToolsSG",
               vpc=vpc,
-              description="Bastion host security group - SSM only",
+              description="Database tools host security group - SSM only",
               allow_all_outbound=True)
 
         # RDS SG - only allow traffic from bastion
@@ -74,14 +73,14 @@ class RdsBastionPyStack(Stack):
 
         # Ingress
         rds_sg.add_ingress_rule(
-                peer=bastion_sg,
+                peer=db_tools_sg,
                 connection=ec2.Port.tcp(5432),
-                description="Allow PostgreSQL from bastion only"
+                description="Allow PostgreSQL from database tools only"
         )
 
         #------------------------------------------------------------------------------------------------
-        # IAM Role for Bastion (SSM and Secrets Manager Access)
-        bastion_role = iam.Role(self, "BastionRole",
+        # IAM Role for Database Tools (SSM and Secrets Manager Access)
+        db_tools_role = iam.Role(self, "DbToolsRole",
                 assumed_by=iam.ServicePrincipal("ec2.amazonaws.com"),
                 managed_policies=[
                     # Required for SSM session manager
@@ -94,8 +93,8 @@ class RdsBastionPyStack(Stack):
                 ])
 
         #------------------------------------------------------------------------------------------------
-        # Bastion EC2 instance (this is in the public subnet so no key pair needed)
-        bastion = ec2.Instance(self, "BastionHost",
+        # Database Tools EC2 instance (this is in the public subnet so no key pair needed)
+        db_tools = ec2.Instance(self, "DbToolsHost",
             instance_type=ec2.InstanceType.of(
                 ec2.InstanceClass.T3, ec2.InstanceSize.MICRO
             ),
@@ -104,14 +103,14 @@ class RdsBastionPyStack(Stack):
             vpc_subnets=ec2.SubnetSelection(
                 subnet_type=ec2.SubnetType.PUBLIC
             ),
-            security_group=bastion_sg,
-            role=bastion_role
+            security_group=db_tools_sg,
+            role=db_tools_role
             # No key pair - access via SSM only
         )
 
         #------------------------------------------------------------------------------------------------
         # Install PostgreSQL client and seed script on instance launch
-        bastion.add_user_data(
+        db_tools.add_user_data(
             "yum update -y",
             "amazon-linux-extras enable postgresql14",
             "yum install -y postgresql",
@@ -176,14 +175,14 @@ INSERT INTO customers (name, email, phone) VALUES ('Alice Johnson', 'alice@examp
 INSERT INTO products (name, description, price, stock) VALUES ('Laptop Pro', '15-inch laptop', 1299.99, 50), ('Wireless Mouse', 'Ergonomic mouse', 29.99, 200) ON CONFLICT DO NOTHING;""",
                                    )
 
-        # Grant bastion read access to seed SQL parameter
-        seed_sql.grant_read(bastion_role)
+        # Grant database tools read access to seed SQL parameter
+        seed_sql.grant_read(db_tools_role)
 
         #------------------------------------------------------------------------------------------------
         # Outputs
-        CfnOutput(self, "BastionInstanceId",
-              value=bastion.instance_id,
-              description="Bastion EC2 Instance ID — use this for SSM port forwarding",
+        CfnOutput(self, "DbToolsInstanceId",
+              value=db_tools.instance_id,
+              description="Database Tools EC2 Instance ID — use this for SSM port forwarding",
               )
 
         CfnOutput(self, "RdsEndpoint",

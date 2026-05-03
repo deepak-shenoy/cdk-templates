@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Build an RDS Database with access through a Bastion Swerver
+# Build an RDS Database that allows access through Session Manager
 # Deepak Shenoy
 # May 3rd, 2026
 #
@@ -8,10 +8,10 @@ import os
 
 import aws_cdk as cdk
 
-from rds_bastion_py.rds_bastion_py_stack import RdsBastionPyStack
+from rds_ssm_py.rds_ssm_py_stack import RdsSSMPyStack
 
 
 app = cdk.App()
-RdsBastionPyStack(app, "RdsBastionPyStack")
+RdsSSMPyStack(app, "RdsSSMPyStack")
 
 app.synth()

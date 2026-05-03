@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Run this script after CDK deploy to seed the RDS database.
-It uses SSM Session Manager to execute SQL on the bastion host.
+It uses SSM Session Manager to execute SQL on the db-tools host.
 
 Usage:
     python3 scripts/seed_database.py --instance-id <BastionInstanceId> --region us-east-1
@@ -51,7 +51,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--instance-id", required=True)
     parser.add_argument("--region", default="us-east-1")
-    parser.add_argument("--stack-name", default="RdsBastionStack")
+    parser.add_argument("--stack-name", default="RdsSSMStack")
     args = parser.parse_args()
 
     print("📦 Fetching stack outputs...")

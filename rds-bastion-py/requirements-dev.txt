@@ -1,5 +1,5 @@
 #
-# Build an RDS Database with access through a Bastion Swerver
+# Build an RDS Database with access through AWS SSM
 #
 # Python requirements file (Development/Test)
 #
