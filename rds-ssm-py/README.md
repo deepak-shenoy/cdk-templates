@@ -22,3 +22,32 @@ service.  When a session starts, SSM routes traffic through this connection.  Th
 to the database server that sits on a private subnet network.
 
 ![Slide1.jpeg](artifacts/docs/Overview/Slide1.jpeg)
+
+### Security Benefits
+
+- No open inbound ports
+- No SSH keys needed
+- RDS is completely unreachable from the internet
+- All traffic is encrypted in transit
+- IAM controls who can connect
+- Credentials are stored in Secrets Manager
+
+### How To Connect
+
+```text
+aws secretsmanager get-secret-value \
+  --secret-id arn:aws:secretsmanager:{your secrets ARN} \
+  --region us-east-1 \
+  --query SecretString \
+  --output text | python3 -c "import sys,json; print(json.load(sys.stdin)['password'])"
+```
+
+Then
+```text
+aws ssm start-session \
+  --target {instance_name} \
+  --document-name AWS-StartPortForwardingSessionToRemoteHost \
+  --parameters host="{full host name}",portNumber="5432",localPortNumber="5432" \
+  --region us-east-1
+```
+Then open your database client to connect to `127.0.0.1:5432`
