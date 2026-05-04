@@ -236,7 +236,8 @@ There should be the following:
 - orders 20 entries
 - order_items 38
 
-## What is a CTE
+## Common Table Expression (CTE)
+### What is a CTE
 A Common Table Expression (CTE) is a temporary named result set that you define at the top of a query 
 using the `WITH` keyword. This feels like the C++ `inline` command where you can define a function prefixed with 
 `inline` and where the function used it the compiler will add the code.  I think that the difference here is that
@@ -437,4 +438,118 @@ SELECT
     path
 FROM org_chart
 ORDER BY path;
+```
+
+## SQL Window Function
+
+### Data Setup
+To set up the data for the SQL Window the following script was used to create random data:
+
+```sql
+INSERT INTO employees_salary (emp_name, dept_name, salary)
+WITH first_names(name) AS (
+    VALUES
+        ('James'),('Mary'),('John'),('Patricia'),('Robert'),('Jennifer'),
+        ('Michael'),('Linda'),('William'),('Barbara'),('David'),('Elizabeth'),
+        ('Richard'),('Susan'),('Joseph'),('Jessica'),('Thomas'),('Sarah'),
+        ('Charles'),('Karen'),('Christopher'),('Lisa'),('Daniel'),('Nancy'),
+        ('Matthew'),('Betty'),('Anthony'),('Margaret'),('Mark'),('Sandra'),
+        ('Donald'),('Ashley'),('Steven'),('Emily'),('Paul'),('Donna'),
+        ('Andrew'),('Michelle'),('Joshua'),('Carol'),('Kevin'),('Amanda'),
+        ('Brian'),('Melissa'),('George'),('Deborah'),('Edward'),('Stephanie'),
+        ('Ronald'),('Rebecca'),('Timothy'),('Sharon'),('Jason'),('Laura'),
+        ('Jeffrey'),('Cynthia'),('Ryan'),('Kathleen'),('Jacob'),('Amy'),
+        ('Gary'),('Angela'),('Nicholas'),('Shirley'),('Eric'),('Anna'),
+        ('Jonathan'),('Brenda'),('Stephen'),('Emma'),('Larry'),('Virginia'),
+        ('Justin'),('Pamela'),('Scott'),('Evelyn'),('Brandon'),('Janet'),
+        ('Raymond'),('Catherine'),('Frank'),('Maria'),('Gregory'),('Heather'),
+        ('Benjamin'),('Diane'),('Samuel'),('Julie'),('Patrick'),('Joyce'),
+        ('Alexander'),('Victoria'),('Jack'),('Kelly'),('Dennis'),('Christina'),
+        ('Jerry'),('Ruth'),('Tyler'),('Joan'),('Aaron'),('Evelyn')
+),
+last_names(name) AS (
+    VALUES
+        ('Smith'),('Johnson'),('Williams'),('Brown'),('Jones'),('Garcia'),
+        ('Miller'),('Davis'),('Rodriguez'),('Martinez'),('Hernandez'),('Lopez'),
+        ('Gonzalez'),('Wilson'),('Anderson'),('Thomas'),('Taylor'),('Moore'),
+        ('Jackson'),('Martin'),('Lee'),('Perez'),('Thompson'),('White'),
+        ('Harris'),('Sanchez'),('Clark'),('Ramirez'),('Lewis'),('Robinson'),
+        ('Walker'),('Young'),('Allen'),('King'),('Wright'),('Scott'),
+        ('Torres'),('Nguyen'),('Hill'),('Flores'),('Green'),('Adams'),
+        ('Nelson'),('Baker'),('Hall'),('Rivera'),('Campbell'),('Mitchell'),
+        ('Carter'),('Roberts'),('Phillips'),('Evans'),('Turner'),('Parker'),
+        ('Collins'),('Edwards'),('Stewart'),('Morris'),('Murphy'),('Cook'),
+        ('Rogers'),('Morgan'),('Peterson'),('Cooper'),('Reed'),('Bailey'),
+        ('Bell'),('Gomez'),('Kelly'),('Howard'),('Ward'),('Cox'),
+        ('Diaz'),('Richardson'),('Wood'),('Watson'),('Brooks'),('Bennett'),
+        ('Gray'),('James'),('Reyes'),('Cruz'),('Hughes'),('Price'),
+        ('Myers'),('Long'),('Foster'),('Sanders'),('Ross'),('Morales'),
+        ('Powell'),('Sullivan'),('Russell'),('Ortiz'),('Jenkins'),('Gutierrez'),
+        ('Perry'),('Butler'),('Barnes'),('Fisher')
+),
+-- Assign a random row number to each first and last name
+shuffled_first AS (
+    SELECT name, ROW_NUMBER() OVER (ORDER BY RANDOM()) AS rn
+    FROM first_names
+),
+shuffled_last AS (
+    SELECT name, ROW_NUMBER() OVER (ORDER BY RANDOM()) AS rn
+    FROM last_names
+),
+-- Pair each first name with a unique last name (100 unique combos)
+base_names AS (
+    SELECT f.name || ' ' || l.name AS full_name,
+           ROW_NUMBER() OVER ()    AS rn
+    FROM shuffled_first f
+    JOIN shuffled_last l ON f.rn = l.rn
+),
+-- Multiply to 400 by appending a number suffix to ensure uniqueness
+all_names AS (
+    SELECT
+        CASE
+            WHEN gs.n = 1 THEN full_name
+            ELSE full_name || ' ' || gs.n::TEXT
+        END AS emp_name,
+        ROW_NUMBER() OVER (ORDER BY RANDOM()) AS rn
+    FROM base_names
+    CROSS JOIN (
+        SELECT generate_series(1, 4) AS n
+    ) gs
+)
+SELECT
+    emp_name,
+    (ARRAY[
+        'HR','IT','Finance','Marketing','Operations',
+        'Sales','Legal','Engineering','Support','Product'
+    ])[FLOOR(RANDOM() * 10 + 1)::INT]       AS dept_name,
+    (FLOOR(RANDOM() * 116 + 35) * 1000)::INT AS salary
+FROM all_names
+LIMIT 400;
+```
+
+Verify uniqueness
+
+```sql
+-- Total count
+SELECT COUNT(*) FROM employees_salary;
+
+-- Check for any duplicate names
+SELECT emp_name, COUNT(*)
+FROM employees_salary
+GROUP BY emp_name
+HAVING COUNT(*) > 1;
+
+-- Department distribution
+SELECT
+    dept_name,
+    COUNT(*)              AS headcount,
+    MIN(salary)           AS min_salary,
+    MAX(salary)           AS max_salary,
+    ROUND(AVG(salary), 0) AS avg_salary
+FROM employees_salary
+GROUP BY dept_name
+ORDER BY headcount DESC;
+
+-- Sample rows
+SELECT * FROM employees_salary LIMIT 10;
 ```
