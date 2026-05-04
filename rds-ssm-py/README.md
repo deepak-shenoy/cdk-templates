@@ -236,4 +236,124 @@ There should be the following:
 - orders 20 entries
 - order_items 38
 
+## What is a CTE
+A Common Table Expression (CTE) is a temporary named result set that you define at the top of a query 
+using the `WITH` keyword. This feels like the C++ `inline` command where you can define a function prefixed with 
+`inline` and where the function used it the compiler will add the code.  I think that the difference here is that
+the result is either pre-compiled or that the query is in such a state that it becomes an efficient construct within 
+another query.
 
+This is an example query I found:
+
+```sql
+SELECT customer_id, SUM(quantity * unit_price) AS total
+FROM orders o
+JOIN order_items oi ON o.id = oi.order_id
+WHERE status = 'completed'
+GROUP BY customer_id
+HAVING SUM(quantity * unit_price) > 500;
+```
+
+I can create a CTE like the following:
+
+```sql
+WITH completed_order_totals AS (
+    SELECT customer_id, SUM(quantity * unit_price) AS total
+    FROM orders o
+    JOIN order_items oi ON o.id = oi.order_id
+    WHERE status = 'completed'
+    GROUP BY customer_id
+)
+SELECT *
+FROM completed_order_totals
+WHERE total > 500;
+```
+
+One thing to note that I have observed is that you cannot create the `WITH` statement on its own.  You
+need to have a followup query.
+
+Basic query - get all the customers from New York:
+
+```sql
+WITH new_york_customers AS (
+    SELECT id, name, email
+    FROM customers
+    WHERE city = 'New York'
+)
+SELECT *
+FROM new_york_customers;
+```
+
+Filtering on a CTE
+
+```sql
+WITH customer_spending AS (
+    SELECT
+        c.id,
+        c.name,
+        c.city,
+        SUM(oi.quantity * oi.unit_price) AS total_spent
+    FROM customers c
+    JOIN orders o      ON c.id = o.customer_id
+    JOIN order_items oi ON o.id = oi.order_id
+    GROUP BY c.id, c.name, c.city
+)
+SELECT *
+FROM customer_spending
+WHERE total_spent > 1000
+ORDER BY total_spent DESC;
+```
+
+Chained CTEs are where we have CTEs built on top of each other like the following:
+
+```sql
+WITH order_totals AS (
+    -- Step 1: total value of each order
+    SELECT
+        o.id         AS order_id,
+        o.customer_id,
+        o.status,
+        SUM(oi.quantity * oi.unit_price) AS order_value
+    FROM orders o
+    JOIN order_items oi ON o.id = oi.order_id
+    GROUP BY o.id, o.customer_id, o.status
+),
+customer_totals AS (
+    -- Step 2: roll up to customer level (reference first CTE)
+    SELECT
+        customer_id,
+        COUNT(order_id)    AS num_orders,
+        SUM(order_value)   AS lifetime_value,
+        MAX(order_value)   AS biggest_order
+    FROM order_totals
+    WHERE status = 'completed'
+    GROUP BY customer_id
+),
+ranked_customers AS (
+    -- Step 3: join back to customers and rank them
+    SELECT
+        c.name,
+        c.city,
+        ct.num_orders,
+        ct.lifetime_value,
+        ct.biggest_order,
+        RANK() OVER (ORDER BY ct.lifetime_value DESC) AS spending_rank
+    FROM customers c
+    JOIN customer_totals ct ON c.id = ct.customer_id
+)
+-- Final query: only show top 5
+SELECT *
+FROM ranked_customers
+WHERE spending_rank <= 5;
+```
+
+Customers who have never placed an order:
+
+```sql
+WITH customers_with_orders AS (
+    SELECT distinct(customer_id) FROM
+    ORDERS
+)
+SELECT id, name FROM
+CUSTOMER where id NOT IN customers_with_orders;
+```
