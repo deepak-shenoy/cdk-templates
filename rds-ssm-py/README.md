@@ -603,3 +603,48 @@ FROM employees_salary e;
 
 You can see that for Engineering and Finance that the max salary is now display (i.e. displayed by department)
 
+```sql
+SELECT e.*,
+       ROW_NUMBER() OVER() AS row_number
+FROM employees_salary e;
+```
+
+This will create a row number at the end of the table.
+
+Since there are no fields inside the `OVER` statement the window applies to the whole table.
+
+If I had used `OVER(PARTITION BY dept_name) as RN` then the row numbers restart for each department.
+
+To find the first three employees in a company the following query can be used:
+
+```sql
+SELECT * FROM (
+    SELECT e.*,
+           ROW_NUMBER() OVER(PARTITION BY dept_name ORDER BY emp_id) AS rn
+) emps
+WHERE emps.rn < 3;
+```
+The aggregate function `RANK` can be used to rank employees by some sort of rating. 
+
+```sql
+SELECT * FROM (SELECT e.*,
+                      RANK() OVER(PARTITION BY dept_name ORDER BY salary DESC) AS rnk
+               FROM employee e;
+) emps
+WHERE emps.rnk < 4;
+```
+
+Give us the to 4 rank by salary.
+
+The `DENSE_RANK()` is similar to the `RANK` function except that it will ensure that tied rankings do not inhibit
+consecutive rankings.
+
+```sql
+SELECT * FROM (SELECT e.*,
+                      RANK() OVER(PARTITION BY dept_name ORDER BY salary DESC) AS rnk,
+                      DENSE_RANK() OVER(PARTITION BY dept_name ORDER BY salary DESC) AS dense_rnk
+               FROM employee e;
+) emps
+WHERE emps.rnk < 4;
+```
+
