@@ -41,8 +41,9 @@ aws secretsmanager get-secret-value \
   --query SecretString \
   --output text | python3 -c "import sys,json; print(json.load(sys.stdin)['password'])"
 ```
+This will print the password you will need for your database client. Then you will need to start the session using
+the following command:
 
-Then
 ```text
 aws ssm start-session \
   --target {instance_name} \
