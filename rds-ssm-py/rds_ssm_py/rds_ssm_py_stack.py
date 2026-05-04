@@ -179,6 +179,19 @@ INSERT INTO products (name, description, price, stock) VALUES ('Laptop Pro', '15
         seed_sql.grant_read(db_tools_role)
 
         #------------------------------------------------------------------------------------------------
+        # Run seed SQL on first boot via user data
+        # db_tools.add_user_data(
+        #     # Retrieve DB credentials from Secrets Manager
+        #     f'SECRET=$(aws secretsmanager get-secret-value --secret-id {db_secret.secret_arn} --region {self.region} --query SecretString --output text)',
+        #     'DB_USER=$(echo $SECRET | jq -r .username)',
+        #     'DB_PASS=$(echo $SECRET | jq -r .password)',
+        #     # Retrieve seed SQL from SSM Parameter Store
+        #     f'SEED_SQL=$(aws ssm get-parameter --name /rds-bastion/seed-sql --region {self.region} --query Parameter.Value --output text)',
+        #     # Run seed SQL against RDS
+        #     f'PGPASSWORD=$DB_PASS psql -h {db_instance.db_instance_endpoint_address} -U $DB_USER -d appdb -c "$SEED_SQL"'
+        # )
+
+        #------------------------------------------------------------------------------------------------
         # Outputs
         CfnOutput(self, "DbToolsInstanceId",
               value=db_tools.instance_id,
