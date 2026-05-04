@@ -653,7 +653,7 @@ There are two functions called `LEAD` and `LAG` that allow you to determine and 
 
 ```sql
 SELECT e.*, 
-       LAG(salary) OVER(PARTION BY dept_name order BY emp_id) AS previous_emp_salary
+       LAG(salary) OVER(PARTITION BY dept_name order BY emp_id) AS previous_emp_salary
 FROM employees_salary e;
 ```
 
@@ -665,3 +665,21 @@ FROM employees_salary e;
 38|Ronald Adams 4|Engineering|48000| 89000      |
 
 Not that the first employee doesn't have a previous salary to use and thus the value is null.  
+
+```sql
+SELECT e.*, 
+       LAG(salary) OVER(PARTITION BY dept_name order BY emp_id) AS previous_emp_salary,
+       LEAD(salary) OVER(PARTITION BY dept_name order BY emp_id) AS next_emp_salary
+FROM employees_salary e;
+```
+
+Results like the following are obtained:
+
+| emp_id                                  | emp_name         | dept_name | salary | previous_emp_salary | next_emp_salary |
+|:----------------------------------------|:-----------------|:---|:---|:--------------------|:-----------|
+19|Angela Powell 3|Engineering|140000| null                |46000
+23|Carol Martinez 4|Engineering|46000| 140000              |89000
+32|Carol Martinez 2|Engineering|89000| 46000               |48000
+38|Ronald Adams 4|Engineering|48000| 89000               |78000
+57|Robert Williams 3|Engineering|78000| 48000               |70000
+65|Richard Brooks|Engineering|70000| 78000               |75000
