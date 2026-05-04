@@ -446,6 +446,16 @@ ORDER BY path;
 To set up the data for the SQL Window the following script was used to create random data:
 
 ```sql
+DROP TABLE IF EXISTS employees_salary;
+
+CREATE TABLE employees_salary (
+    emp_id    SERIAL PRIMARY KEY,
+    emp_name  VARCHAR(100),
+    dept_name VARCHAR(50),
+    salary    INTEGER
+);
+
+
 INSERT INTO employees_salary (emp_name, dept_name, salary)
 WITH first_names(name) AS (
     VALUES
@@ -553,3 +563,43 @@ ORDER BY headcount DESC;
 -- Sample rows
 SELECT * FROM employees_salary LIMIT 10;
 ```
+
+To extract the max salary for an employee in each department the `max` function can be used but if further aggregate
+information is needed then it becomes more complex.
+
+```sql
+SELECT e.*,
+       MAX(salary) OVER() AS max_salary
+FROM employees_salary e;
+```
+The `MAX` is where we place the aggregate function.  The `OVER` clause creates a window of records.  This creates an extra
+column with the same max salary value.
+
+| emp_id                                  | emp_name         | dept_name | salary | max_salary |
+|:----------------------------------------|:-----------------|:---|:---|:---|
+| 1| Julie Phillips 4 | Legal    | 59000    | 150000   |
+| 2|Shirley Rivera 2|Support|134000|150000|
+| 3|Virginia Moore|Operations|85000|150000
+| 4|Kevin Sanders 3|IT|146000|150000|
+| 5|Jack Campbell 2|Legal|137000|150000|  
+
+The clause `PARTITION BY dept_name` this will create one window for each of the department.  The aggregate
+function will be applied to each window.
+
+```sql
+SELECT e.*,
+       MAX(salary) OVER(PARTITION BY dept_name) AS max_salary
+FROM employees_salary e;
+```
+
+| emp_id                                  | emp_name         | dept_name | salary | max_salary |
+|:----------------------------------------|:-----------------|:---|:---|:---|
+219|Jason Green 3|Engineering|58000|145000
+242|Linda Parker|Engineering|121000|145000
+127|Amanda Price 3|Engineering|145000|145000
+22|Mary Mitchell 3|Finance|126000|150000
+134|Thomas Rogers 2|Finance|53000|150000
+234|Donna Foster|Finance|68000|150000
+
+You can see that for Engineering and Finance that the max salary is now display (i.e. displayed by department)
+
