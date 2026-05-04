@@ -621,6 +621,7 @@ To find the first three employees in a company the following query can be used:
 SELECT * FROM (
     SELECT e.*,
            ROW_NUMBER() OVER(PARTITION BY dept_name ORDER BY emp_id) AS rn
+    FROM employees_salary e;
 ) emps
 WHERE emps.rn < 3;
 ```
@@ -629,7 +630,7 @@ The aggregate function `RANK` can be used to rank employees by some sort of rati
 ```sql
 SELECT * FROM (SELECT e.*,
                       RANK() OVER(PARTITION BY dept_name ORDER BY salary DESC) AS rnk
-               FROM employee e;
+               FROM employees_salary e;
 ) emps
 WHERE emps.rnk < 4;
 ```
@@ -643,8 +644,24 @@ consecutive rankings.
 SELECT * FROM (SELECT e.*,
                       RANK() OVER(PARTITION BY dept_name ORDER BY salary DESC) AS rnk,
                       DENSE_RANK() OVER(PARTITION BY dept_name ORDER BY salary DESC) AS dense_rnk
-               FROM employee e;
+         FROM employees_salary e;
 ) emps
 WHERE emps.rnk < 4;
 ```
 
+There are two functions called `LEAD` and `LAG` that allow you to determine and use the prior value.  
+
+```sql
+SELECT e.*, 
+       LAG(salary) OVER(PARTION BY dept_name order BY emp_id) AS previous_emp_salary
+FROM employees_salary e;
+```
+
+| emp_id                                  | emp_name         | dept_name | salary | previous_emp_salary |
+|:----------------------------------------|:-----------------|:---|:---|:-----------|
+19|Angela Powell 3|Engineering|140000| null       |
+23|Carol Martinez 4|Engineering|46000| 140000     |
+32|Carol Martinez 2|Engineering|89000| 46000      |
+38|Ronald Adams 4|Engineering|48000| 89000      |
+
+Not that the first employee doesn't have a previous salary to use and thus the value is null.  
