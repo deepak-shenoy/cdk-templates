@@ -243,6 +243,12 @@ using the `WITH` keyword. This feels like the C++ `inline` command where you can
 the result is either pre-compiled or that the query is in such a state that it becomes an efficient construct within 
 another query.
 
+CTEs are typically used to help make a large query more readable and manageable.  They can be structured into steps
+that are processed sequentially thus helping with readability.
+
+Recursive operations or recursive CTEs are the standard way to handle hierarchical data (for example, organizational
+charts, family trees or a bill or materials) because they allow the query to reference itself.
+
 This is an example query I found:
 
 ```sql
@@ -356,4 +362,79 @@ WITH customers_with_orders AS (
 )
 SELECT id, name FROM
 CUSTOMER where id NOT IN customers_with_orders;
+```
+Recursive CTEs is a query that references itself.  It keeps running until it has no more rows to process. 
+Good for parent-child relationships or those that require iterative processing.  Note that the `RECURSIVE` keyword:
+
+```sql
+WITH RECURSIVE counter AS (
+    -- Anchor: start at 1
+    SELECT 1 AS n
+
+    UNION ALL
+
+    -- Recursive: add 1 each time, stop at 10
+    SELECT n + 1
+    FROM counter
+    WHERE n < 10
+)
+SELECT * FROM counter;
+```
+It can be used to traverse an organization chart like the following:
+
+```sql
+CREATE TABLE employees (
+    id         SERIAL PRIMARY KEY,
+    name       VARCHAR(100),
+    role       VARCHAR(100),
+    manager_id INT REFERENCES employees(id)  -- points to another employee
+);
+
+INSERT INTO employees (name, role, manager_id) VALUES
+    ('Sarah CEO',     'Chief Executive',    NULL),  -- id 1, top of tree
+    ('James CTO',     'Chief Technology',   1),     -- id 2, reports to Sarah
+    ('Lisa CFO',      'Chief Finance',      1),     -- id 3, reports to Sarah
+    ('Tom VP Eng',    'VP Engineering',     2),     -- id 4, reports to James
+    ('Anna VP Data',  'VP Data',            2),     -- id 5, reports to James
+    ('Mike Dir Fin',  'Director Finance',   3),     -- id 6, reports to Lisa
+    ('Carol Eng',     'Senior Engineer',    4),     -- id 7, reports to Tom
+    ('Dave Eng',      'Senior Engineer',    4),     -- id 8, reports to Tom
+    ('Eve Data',      'Data Scientist',     5),     -- id 9, reports to Anna
+    ('Frank Fin',     'Finance Analyst',    6);     -- id 10, reports to Mike
+```
+To traverse the organization chart:
+
+```sql
+WITH RECURSIVE org_chart AS (
+    -- Anchor: start at the CEO (no manager)
+    SELECT
+        id,
+        name,
+        role,
+        manager_id,
+        0               AS depth,
+        name::TEXT      AS path
+    FROM employees
+    WHERE manager_id IS NULL
+
+    UNION ALL
+
+    -- Recursive: find each employee's direct reports
+    SELECT
+        e.id,
+        e.name,
+        e.role,
+        e.manager_id,
+        oc.depth + 1,
+        oc.path || ' → ' || e.name
+    FROM employees e
+    JOIN org_chart oc ON e.manager_id = oc.id
+)
+SELECT
+    REPEAT('    ', depth) || name   AS org_chart,
+    role,
+    depth                           AS level,
+    path
+FROM org_chart
+ORDER BY path;
 ```
