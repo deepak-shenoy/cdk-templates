@@ -1,0 +1,15 @@
+#!/usr/bin/env node
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+//
+// Deepak Shenoy
+// API Gateway, Lambda and S3 setup
+// June 5th, 2026
+//
+//
+require("source-map-support/register");
+const cdk = require("aws-cdk-lib");
+const api_lambda_s3_ts_stack_1 = require("../lib/api-lambda-s3-ts-stack");
+const app = new cdk.App();
+new api_lambda_s3_ts_stack_1.ApiLambdaS3TsStack(app, 'ApiLambdaS3TsStack', {});
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiYXBpLWxhbWJkYS1zMy10cy5qcyIsInNvdXJjZVJvb3QiOiIiLCJzb3VyY2VzIjpbImFwaS1sYW1iZGEtczMtdHMudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7O0FBQ0EsRUFBRTtBQUNGLGdCQUFnQjtBQUNoQixtQ0FBbUM7QUFDbkMsaUJBQWlCO0FBQ2pCLEVBQUU7QUFDRixFQUFFO0FBQ0YsdUNBQXFDO0FBQ3JDLG1DQUFtQztBQUNuQywwRUFBbUU7QUFFbkUsTUFBTSxHQUFHLEdBQUcsSUFBSSxHQUFHLENBQUMsR0FBRyxFQUFFLENBQUM7QUFDMUIsSUFBSSwyQ0FBa0IsQ0FBQyxHQUFHLEVBQUUsb0JBQW9CLEVBQUUsRUFFakQsQ0FBQyxDQUFDIiwic291cmNlc0NvbnRlbnQiOlsiIyEvdXNyL2Jpbi9lbnYgbm9kZVxuLy9cbi8vIERlZXBhayBTaGVub3lcbi8vIEFQSSBHYXRld2F5LCBMYW1iZGEgYW5kIFMzIHNldHVwXG4vLyBKdW5lIDV0aCwgMjAyNlxuLy9cbi8vXG5pbXBvcnQgJ3NvdXJjZS1tYXAtc3VwcG9ydC9yZWdpc3Rlcic7XG5pbXBvcnQgKiBhcyBjZGsgZnJvbSAnYXdzLWNkay1saWInO1xuaW1wb3J0IHsgQXBpTGFtYmRhUzNUc1N0YWNrIH0gZnJvbSAnLi4vbGliL2FwaS1sYW1iZGEtczMtdHMtc3RhY2snO1xuXG5jb25zdCBhcHAgPSBuZXcgY2RrLkFwcCgpO1xubmV3IEFwaUxhbWJkYVMzVHNTdGFjayhhcHAsICdBcGlMYW1iZGFTM1RzU3RhY2snLCB7XG5cbn0pOyJdfQ==
