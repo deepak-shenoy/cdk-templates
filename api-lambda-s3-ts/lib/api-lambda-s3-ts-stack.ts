@@ -14,13 +14,16 @@ import * as s3 from 'aws-cdk-lib/aws-s3'
 
 import * as iam from 'aws-cdk-lib/aws-iam'
 import * as lambda from 'aws-cdk-lib/aws-lambda'
+import * as apigw from 'aws-cdk-lib/aws-apigateway'
 
 export class ApiLambdaS3TsStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
 
+    // ---------------------------------------------------------------------------------------------
     // Bucket creation
+    // ---------------------------------------------------------------------------------------------
     const bucketSourceS3 = new s3.Bucket(this, "s3BucketLogicalId", {
       // This needs to be globally unique
       bucketName: 's3bucketdemo-abcd',
@@ -35,7 +38,9 @@ export class ApiLambdaS3TsStack extends cdk.Stack {
 
     iamRole.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName("AmazonS3FullAccess"));
 
+    // ---------------------------------------------------------------------------------------------
     // Lambda function
+    // ---------------------------------------------------------------------------------------------
     const lambdaFunction = new lambda.Function(this, 'lambdaFunction', {
       code: lambda.Code.fromAsset('scripts/lambda/'),
       handler: 'lambda_function.lambda_handler',
@@ -45,6 +50,22 @@ export class ApiLambdaS3TsStack extends cdk.Stack {
         BUCKET_NAME: bucketSourceS3.bucketName
       }
     });
+
+    // ---------------------------------------------------------------------------------------------
+    // API Gateway
+    // ---------------------------------------------------------------------------------------------
+
+    const apiGateway = new apigw.LambdaRestApi(this, "demoAPIGateway", {
+      handler: lambdaFunction,
+      restApiName: 'demoapigateway',
+      deploy: true,
+      proxy: false
+    });
+
+    // Adding resources
+    const demoResource = apiGateway.root.addResource('gatewaydemoresource');
+    demoResource.addMethod('GET');
+
 
 
   }
