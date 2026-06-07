@@ -19,12 +19,8 @@ export class ApiLambdaS3TsStack extends cdk.Stack {
     // The code that defines your stack goes here
 
     const bucketSourceS3 = new s3.Bucket(this, "s3BucketLogicalId", {
-      bucketName: 's3bucketdemo',
+      // This needs to be globally unique
+      bucketName: 's3bucketdemo-abcd',
     })
-
-    // example resource
-    // const queue = new sqs.Queue(this, 'ApiLambdaS3TsQueue', {
-    //   visibilityTimeout: cdk.Duration.seconds(300)
-    // });
   }
 }
