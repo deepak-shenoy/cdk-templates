@@ -16,18 +16,17 @@ def lambda_handler(event, context):
     #
     # To-do - Get the contents from the S3 bucket
     #
-    response = "{ \"message\": \"Test Data\" }"
+    response = json.loads('{"message": "Test Data"}')
     # response = s3_client.get_object(
     #     Bucket = 's3bucketdemo-abcd',
     #     Key = 'SampleFile.json'
     # )
 
     data_body = response['message']
-    data_body_cleaned = data_body.decode('UTF-8')
 
     # To do
     # Test output - use the contents from the S3 bucket
     return {
         'statusCode': 200,
-        'body': json.dumps(data_body_cleaned)
+        'body': json.dumps(data_body)
     }
